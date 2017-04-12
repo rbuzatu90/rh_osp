@@ -39,7 +39,7 @@ subscription-manager repos $baseVersionRPMS --enable=rhel-7-server-extras-rpms -
 
 yum -y update
 yum -y install rsyslog ntp gpm bash-completion screen deltarpm crudini tmux
-yum -y install git libguestfs-tools guestfish
+yum -y install git libguestfs-tools guestfish vim
 
 
 systemctl enable rsyslog ntpd gpm
