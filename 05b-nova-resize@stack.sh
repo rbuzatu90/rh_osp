@@ -1,5 +1,6 @@
 #!/bin/bash
 NewTemplates=/home/stack/new_templates
+mkdir $NewTemplates
 
 cat << EOF >>$NewTemplates/postdeploy.yaml
 
