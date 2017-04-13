@@ -1,4 +1,5 @@
-#!/bin/bashNewTemplates=/home/stack/new_templates
+#!/bin/bash
+NewTemplates=/home/stack/new_templates
 cat >> $NewTemplates/infra-env.yaml <<EOF
 
 parameter_defaults:
