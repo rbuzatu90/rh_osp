@@ -12,6 +12,9 @@ openstack baremetal node list
 echo '###### Add new nodes ######'*****
 INSTACK=instack-new
 VirshSRV=root@192.168.122.1
+eval `ssh-agent -s`
+ssh-add .ssh/id_rsa2
+ssh-add .ssh/id_rsa
 ssh-copy-id -o StrictHostKeyChecking=no $VirshSRV
 scp $VirshSRV:.ssh/* .ssh
 
