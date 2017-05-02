@@ -1,22 +1,60 @@
 #!/bin/bash
 
-CPUOPTS="--cpu host"
-GRAPHICS="--graphics vnc --video=cirrus"
-CONTROLLER="--controller scsi,model=virtio-scsi,index=0"
-DISKOPTS="format=qcow2,bus=scsi,cache=writeback"
+set -x
+
+CPU_OPTS="--cpu host"
+GRAPHICS_OPTS="--graphics vnc --video=cirrus"
+CONTROLLER_OPTS="--controller scsi,model=virtio-scsi,index=0"
+MISC_OPTS="--noautoconsole --print-xml --check path_in_use=no"
+BOOT_OPTS="--boot cdrom,hd,menu=on"
 VMBASE=/vms
-RHEL_ISO=/var/lib/libvirt/images/rhel-server-7.2-x86_64-dvd.iso
+VMs="controller-os compute-os network-os"
+RESOURCES_OPTS="--ram 4096 --vcpus=2"
 
-# Create the director / undercloud node
-virt-install --noautoconsole --print-xml --boot cdrom,hd,menu=on $GRAPHICS --ram 4096 --vcpus=2 $CPUOPTS $CONTROLLER --name=director --disk=path=$RHEL_ISO,device=cdrom  --disk=path=$VMBASE/director/director.qcow,size=40,$DISKOPTS --network=network=default,mac=52:54:00:63:0e:00,model=virtio > ~/director.xml
+# ctlplane no dhcp; mgm-net no dhcp but external with nat
+NETWORK_1="--network=network=ctlplane,model=virtio,mac="
+NETWORK_2="--network=network=mgmt-net,model=virtio,mac="
+NETWORK_3="--network=network=mgmt-net,model=virtio,mac="
 
-#Create the controller node
-virt-install --noautoconsole --print-xml --boot cdrom,hd,menu=on $GRAPHICS --ram 4096 --vcpus=2 $CPUOPTS $CONTROLLER --name=controller --disk=path=$VMBASE/controller/controller.qcow,size=40,$DISKOPTS --network=network=default,mac=52:54:00:63:0e:01,model=virtio > ~/controller.xml
+INSTALLER_DISK="$VMBASE/images/rhel-server-7.2-x86_64-dvd.iso"
+KICKSTART_DISK="$VMBASE/images/ks_disk.img"
 
-#Create the compute node
-virt-install --noautoconsole --print-xml --boot network,hd,menu=on $GRAPHICS --ram 4096 --vcpus=2 $CPUOPTS $CONTROLLER --name=compute --disk=path=$VMBASE/compute/compute.qcow,size=40,$DISKOPTS --network=network=default,mac=52:54:00:63:0e:02,model=virtio > ~/compute.xml
+DISK_1="--disk=path=$INSTALLER_DISK,device=cdrom"
+DISK_2="--disk pool=storage-pool,size=40,format=qcow2,bus=scsi,cache=writeback"
+DISK_3="--disk=path=$KICKSTART_DISK,bus=scsi,cache=writeback"
 
+MAC_CONTROLLER1="52:54:00:ae:1d:01"
+MAC_CONTROLLER2="52:54:00:ae:1d:02"
+MAC_CONTROLLER3="52:54:00:ae:1d:03"
+MAC_COMPUTE1="52:54:00:ae:1d:04"
+MAC_COMPUTE2="52:54:00:ae:1d:05"
 
-virsh define ~/compute.xml
-virsh define ~/director.xml
-virsh define ~/controller.xml
+#Create the controller node1
+virsh destroy controller-lab1
+virsh undefine controller-lab1
+virt-install $MISC_OPTS $BOOT_OPTS $GRAPHICS_OPTS $RESOURCES_OPTS $CPU_OPTS $CONTROLLER_OPTS $DISK_1 $DISK_2 $DISK_3 $NETWORK_1$MAC_CONTROLLER1 $NETWORK_2$MAC_CONTROLLER1 $NETWORK_3$MAC_CONTROLLER1 --name=controller-lab1 > controller-lab1
+virsh define controller-lab1
+
+#Create the controller node2
+virsh destroy controller-lab2
+virsh undefine controller-lab2
+virt-install $MISC_OPTS $BOOT_OPTS $GRAPHICS_OPTS $RESOURCES_OPTS $CPU_OPTS $CONTROLLER_OPTS $DISK_1 $DISK_2 $DISK_3 $NETWORK_1$MAC_CONTROLLER2 $NETWORK_2$MAC_CONTROLLER2 $NETWORK_3$MAC_CONTROLLER2 --name=controller-lab2 > controller-lab2
+virsh define controller-lab2
+
+#Create the controller node3
+virsh destroy controller-lab3
+virsh undefine controller-lab3
+virt-install $MISC_OPTS $BOOT_OPTS $GRAPHICS_OPTS $RESOURCES_OPTS $CPU_OPTS $CONTROLLER_OPTS $DISK_1 $DISK_2 $DISK_3 $NETWORK_1$MAC_CONTROLLER3 $NETWORK_2$MAC_CONTROLLER3  $NETWORK_3$MAC_CONTROLLER3 --name=controller-lab3 > controller-lab3
+virsh define controller-lab3
+
+#Create the compute node1
+virsh destroy compute-lab1
+virsh undefine compute-lab1
+virt-install $MISC_OPTS $BOOT_OPTS $GRAPHICS_OPTS $RESOURCES_OPTS $CPU_OPTS $CONTROLLER_OPTS $DISK_1 $DISK_2 $DISK_3 $NETWORK_1$MAC_COMPUTE1 $NETWORK_2$MAC_COMPUTE1 $NETWORK_3$MAC_COMPUTE1 --name=compute-lab1 > compute-lab1
+virsh define compute-lab1
+
+#Create the compute node2
+virsh destroy compute-lab2
+virsh undefine compute-lab2
+virt-install $MISC_OPTS $BOOT_OPTS $GRAPHICS_OPTS $RESOURCES_OPTS $CPU_OPTS $CONTROLLER_OPTS $DISK_1 $DISK_2 $DISK_3 $NETWORK_1S$MAC_COMPUTE2 $NETWORK_2$MAC_COMPUTE2  $NETWORK_3$MAC_COMPUTE2 --name=compute-lab2 > compute-lab2
+virsh define compute-lab2
