@@ -18,9 +18,12 @@ ssh-add .ssh/id_rsa
 ssh-copy-id -o StrictHostKeyChecking=no $VirshSRV
 scp $VirshSRV:.ssh/* .ssh
 
-for SRV in `virsh --connect qemu+ssh://$VirshSRV/system list --all|grep Overcloud|cut -c8-38`
+# Get all nodes from this deployment; should contain "osp" in name
+for SRV in `virsh --connect qemu+ssh://$VirshSRV/system list --all| grep osp | cut -c8-38`
 do
-	i=$(virsh --connect qemu+ssh://$VirshSRV/system domiflist "$SRV" | grep -i Deploy | awk '{print $5};'|head -1)
+        # Get provisioning "cltplane" network interface
+	i=$(virsh --connect qemu+ssh://$VirshSRV/system domiflist "$SRV" | grep ctlplane | awk '{print $5};'|head -1) 
+        # Get the profile of the node, should end in "compute" or "controller"
 	prof=$(echo "$SRV"|sed "s/.*-\(.*\)/\1/g")
 echo "****** adding $SRV ($i) as $prof *********"
         INSTACKnode=$INSTACK-$SRV.json
