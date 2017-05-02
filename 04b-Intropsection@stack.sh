@@ -23,8 +23,8 @@ for SRV in `virsh --connect qemu+ssh://$VirshSRV/system list --all| grep osp | c
 do
         # Get provisioning "cltplane" network interface
 	i=$(virsh --connect qemu+ssh://$VirshSRV/system domiflist "$SRV" | grep ctlplane | awk '{print $5};'|head -1) 
-        # Get the profile of the node, should end in "compute" or "controller"
-	prof=$(echo "$SRV"|sed "s/.*-\(.*\)/\1/g")
+        # Get the profile of the node, should end in "compute", "control" or "ceph-storage"
+	prof=$(echo "$SRV" | grep -o "compute\|control\|ceph-storage")
 echo "****** adding $SRV ($i) as $prof *********"
         INSTACKnode=$INSTACK-$SRV.json
 	KEY=`cat ~/.ssh/id_rsa|sed 's/  //g;s/$/\\\\n/g;s/END RSA PRIVATE KEY-----.*/END RSA PRIVATE KEY-----/g'|tr -d '\n'`
