@@ -3,12 +3,13 @@
 
 OpenstackVersion=10
 Username=your_username
-#OpenstackVersion=9
-# add rsyslog et ntp
-hostnamectl --static set-hostname undercloud.test.net
-hostnamectl --transient set-hostname undercloud.test.net
+hostname=undercloud
+
+hostnamectl --static set-hostname $hostname
+hostnamectl --transient set-hostname $hostname 
+
 sed -i "s/.*127.0.0.1*//g" /etc/hosts
-echo "127.0.0.1 undercloud.text.net undercloud localhost localhost.localdomain localhost4 localhost4.localdomain4" >> /etc/hosts
+echo "127.0.0.1 undercloud localhost localhost.localdomain localhost4 localhost4.localdomain4" >> /etc/hosts
 
 echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/99-undercloud.conf
 systemctl restart systemd-sysctl
@@ -24,7 +25,6 @@ echo "Enter redhat Subscription password"
 subscription-manager register --username=$Username
 PoolID=$(subscription-manager list --available|grep -v "^ "|grep -m1 -A 5 "Employee SKU"|awk -F: '/ool/{print $2}'|sed "s/ //g")
 subscription-manager attach --pool=$PoolID
-#--pool=8a85f9843e3d687a013e3ddd471a083e
 
 subscription-manager repos --disable=*
 if [ "$OpenstackVersion" == "beta" ]
@@ -37,27 +37,10 @@ fi
 subscription-manager repos $baseVersionRPMS --enable=rhel-7-server-extras-rpms --enable rhel-7-server-rh-common-rpms
 
 
-yum -y update
 yum -y install rsyslog ntp gpm bash-completion screen deltarpm crudini rsync tcpdump telnet git libguestfs-tools guestfish vim
-
+yum -y update
 
 systemctl enable rsyslog ntpd gpm
 systemctl start rsyslog ntpd gpm
-
-cat > ~stack/.tmux.conf << EOF
-set -g prefix C-a
-
-unbind-key C-b
-bind-key C-a send-prefix
-
-set -g mode-mouse on
-set -g mouse-resize-pane on
-set -g mouse-select-pane on
-set -g mouse-select-window on
-set-option -g pane-active-border-fg red
-set-window-option -g window-status-current-bg blue
-set -g status-bg white
-
-EOF
 
 echo "###### Preparation finished, REBOOT ######"

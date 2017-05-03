@@ -23,27 +23,6 @@ echo "$extNet.11 admin_$Vip admin_$Vip.$Domain" |sudo tee -a /etc/hosts
 sudo yum install -y python-rdomanager-oscplugin openstack-utils python-tripleoclient firewalld
 cp /usr/share/instack-undercloud/undercloud.conf.sample ~/undercloud.conf
 
-
-echo "####### generating CA certificat #####"
-Subj="/C=RO/ST=IDF/L=Bucharest/O=$Domain/OU=LAB/CN=*.$Domain/emailAddress=root@test.net"
-
-openssl genrsa -out ca.$Domain.key.pem 4096
-openssl req  -key ca.$Domain.key.pem -new -x509 -days 7300 -extensions v3_ca -out ca.$Domain.crt.pem -subj $Subj
-
-echo "####### generating SERVER certificat #####"
-openssl genrsa -out server.$Domain.key.pem 4096
-openssl req  -key server.$Domain.key.pem -new -x509 -days 7300 -extensions v3_ca -out server.$Domain.csr.pem -subj $Subj
-
-echo "####### signing SERVER certificat #####"
-openssl ca -extensions v3_req -days 3650 -in server.$Domain.csr.pem -out server.$Domain.crt.pem -cert ca.$Domain.crt.pem -keyfile ca.$Domain.key.pem
-
-echo "####### deploying SERVER CA certificat #####"
-cat server.$Domain.crt.pem server.$Domain.key.pem > undercloud.$Domain.pem
-sudo mkdir /etc/pki/instack-certs
-sudo cp ~/undercloud.$Domain.pem /etc/pki/instack-certs/.
-sudo semanage fcontext -a -t etc_t "/etc/pki/instack-certs(/.*)?"
-sudo restorecon -R /etc/pki/instack-certs
-
 echo "####### Configuroing Undercloud  #####"
 crudini --set ~/undercloud.conf DEFAULT image_path $Images
 crudini --set ~/undercloud.conf DEFAULT local_ip $Net.35/24
@@ -62,11 +41,7 @@ crudini --set ~/undercloud.conf DEFAULT dhcp_domain $Domain
 crudini --set ~/undercloud.conf DEFAULT dns_domain $Domain
 crudini --set ~/undercloud.conf DEFAULT undercloud_hostname undercloud.$Domain
 crudini --set ~/undercloud.conf DEFAULT generate_service_certificate yes
-#crudini --set ~/undercloud.conf DEFAULT undercloud_service_certificate undercloud.$Domain.pem 
 crudini --set ~/undercloud.conf DEFAULT enable_ui yes
-
- 
-
 
 echo "####### Undercloud Installation #####"
 openstack undercloud install
