@@ -29,6 +29,7 @@ CEPH_COUNT=3
 
 function create_vms() {
     ROLE=$1
+    COUNT=$2
     for INDEX in $(eval echo "{1..$COUNT}");do 
         $VIRSH_BASE --name $BASE_NAME-$ROLE$INDEX > $BASE_NAME-$ROLE$INDEX
     done
