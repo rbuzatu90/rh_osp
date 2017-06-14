@@ -29,7 +29,7 @@ CEPH_COUNT=3
 
 function create_vms() {
     ROLE=$1
-    for INDEX in $(eval echo "{1..$CONTROLLER_COUNT}");do 
+    for INDEX in $(eval echo "{1..$COUNT}");do 
         $VIRSH_BASE --name $BASE_NAME-$ROLE$INDEX > $BASE_NAME-$ROLE$INDEX
     done
 }
@@ -37,6 +37,6 @@ function create_vms() {
 create_vms controller $CONTROLLER_COUNT
 create_vms compute $COMPUTE_COUNT
 # Uncomment if you want ceph nodes
-create_vms ceph $CEPH_COUNT
+#create_vms ceph $CEPH_COUNT
 
 

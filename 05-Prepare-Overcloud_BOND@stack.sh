@@ -129,51 +129,50 @@ cp -rp $BaseTemplate/network/config/$TypeTemplate/controller.yaml $NewTemplates/
 cp -rp $BaseTemplate/network/config/$TypeTemplate/compute.yaml $NewTemplates/compute.yaml
 
 patch $NewTemplates/controller.yaml << EOF
-*** templates/network/config/bond-with-vlans/controller.yaml	2016-03-28 17:42:18.000000000 +0200
---- new_templates/controller.yaml	2016-06-20 12:12:35.994341163 +0200
-***************
-*** 108,111 ****
---- 108,130 ----
-                members:
-                  -
-+                   type: interface
-+                   name: nic4
-+ #                -
-+ #                  type: vlan
-+ #                  device: nic4
-+ #                  vlan_id: {get_param: ExternalNetworkVlanID}
-+               addresses:
-+                 -
-+                   ip_netmask: {get_param: ExternalIpSubnet}
-+               routes:
-+                 -
-+                   default: true
-+                   next_hop: {get_param: ExternalInterfaceDefaultRoute}
-+             -
-+               type: ovs_bridge
-+               name: br_prov
-+               dns_servers: {get_param: DnsServers}
-+               members:
-+                 -
-                    type: ovs_bond
-                    name: bond1
-***************
-*** 121,135 ****
-                  -
-                    type: vlan
--                   device: bond1
--                   vlan_id: {get_param: ExternalNetworkVlanID}
--                   addresses:
--                     -
--                       ip_netmask: {get_param: ExternalIpSubnet}
--                   routes:
--                     -
--                       default: true
--                       next_hop: {get_param: ExternalInterfaceDefaultRoute}
--                 -
--                   type: vlan
-                    device: bond1
-                    vlan_id: {get_param: InternalApiNetworkVlanID}
---- 140,143 ----
-
+--- /usr/share/openstack-tripleo-heat-templates/network/config/bond-with-vlans/controller.yaml    2017-01-03 02:14:27.000000000 +0200
++++ templates/nic-configs/controller.yaml    2017-05-08 10:22:18.280364577 +0300
+@@ -117,6 +117,14 @@
+               type: ovs_bridge
+               name: {get_input: bridge_name}
+               dns_servers: {get_param: DnsServers}
++              use_dhcp: false
++              addresses:
++                -
++                  ip_netmask: {get_param: ExternalIpSubnet}
++              routes:
++                -
++                  default: true
++                  next_hop: {get_param: ExternalInterfaceDefaultRoute}
+               members:
+                 -
+                   type: ovs_bond
+@@ -130,17 +138,17 @@
+                     -
+                       type: interface
+                       name: nic3
+-                -
+-                  type: vlan
+-                  device: bond1
+-                  vlan_id: {get_param: ExternalNetworkVlanID}
+-                  addresses:
+-                    -
+-                      ip_netmask: {get_param: ExternalIpSubnet}
+-                  routes:
+-                    -
+-                      default: true
+-                      next_hop: {get_param: ExternalInterfaceDefaultRoute}
++#                -
++#                  type: vlan
++#                  device: bond1
++#                  vlan_id: {get_param: ExternalNetworkVlanID}
++#                  addresses:
++#                    -
++#                      ip_netmask: {get_param: ExternalIpSubnet}
++#                  routes:
++#                    -
++#                      default: true
++#                      next_hop: {get_param: ExternalInterfaceDefaultRoute}
+                 -
+                   type: vlan
+                   device: bond1
 EOF
